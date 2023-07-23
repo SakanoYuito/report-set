@@ -229,3 +229,21 @@ class Set(Treap):
 
     def order(self):
         return len(self.items())
+
+
+# s = Set([0, 1, 2])
+# print(s)
+# print(s + s)
+# print(s - s)
+# print(s * s)
+# print(s & s)
+# print(s | s)
+# print(2 ** s)
+# print(1 in s)
+# print(4 in s)
+# print(s <= Set([0, 1, 2, 3]))
+# print(s <= Set([0, 1]))
+# print(s >= Set([0, 1]))
+# print(s >= Set([0, 1, 2, 3]))
+# print(s == Set([0, 1, 2]))
+# print(Set.product(s, s, s))
