@@ -4,14 +4,14 @@ from random import random
 
 class Node:
     def __init__(self, val, key: Any):
-        self.val = val
-        self.key: Any = key                  # 値
+        self.val = val                                   # 値
+        self.key: Any = key                              # 木管理のためのキー
         self.child: list[Optional[Node]] = [None, None]  # [左の子, 右の子]
-        self.priority: float = random()      # 優先度
-        self.size: int = 1                   # 部分木のサイズ
-        self.sum: int = key                  # 部分木の値の和
+        self.priority: float = random()                  # 優先度
+        self.size: int = 1                               # 部分木のサイズ
+        self.sum: int = key                              # 部分木の値の和
 
-    def update(self):
+    def update(self):  # ノードの更新
         siz_child = [0, 0]
         sum_child = [0, 0]
 
@@ -40,9 +40,9 @@ class Treap:
             return t.sum
 
     def __init__(self):
-        self.root: Optional[Node] = None
+        self.root: Optional[Node] = None  # 根のノードを保持しておく
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # 出力時の整形
         if self.root == None:
             return '{}'
         items = []
@@ -56,6 +56,22 @@ class Treap:
         res = '{' + ", ".join(map(str, items)) + '}'
         return res
 
+    def __repr__(self) -> str:  # 出力時の整形
+        if self.root == None:
+            return '{}'
+        items = []
+        stack = [self.root]
+        while len(stack) > 0:
+            p = stack.pop()
+            items.append(p.val)
+            for c in p.child:
+                if c != None:
+                    stack.append(c)
+        res = '{' + ", ".join(map(str, items)) + '}'
+        return res
+
+    # 木の回転  b=0 で左回転, b=1 で右回転
+    # 再帰関数として実装する都合上、別で public なメンバ関数 rotate を用意しています
     def _rotate(root: Optional[Node], b):
         s = root.child[1-b]
         root.child[1-b] = s.child[b]
@@ -64,6 +80,8 @@ class Treap:
         s.update()
         return s
 
+    # 値の挿入  値として int など以外のものを入れるにあたって、str(val) の hash をみかけ上の key としています. 最悪な実装ですが, うまい方法が思いつきませんでした
+    # 再帰関数として実装する都合上、別で public なメンバ関数 insert を用意しています
     def _insert(root: Optional[Node], val):
         key = hash(str(val))
         if root == None:
@@ -78,6 +96,8 @@ class Treap:
 
         return root
 
+    # 値が key であるノードの削除
+    # 再帰関数として実装する都合上、別で public なメンバ関数 erase を用意しています
     def _erase(root: Optional[Node], key):
         if root == None:
             return None
@@ -94,6 +114,8 @@ class Treap:
                 root.child[1-b] = Treap._erase(root.child[1-b], key)
         return root
 
+    # 値が val であるノードの検索 あれば True, なければ False
+    # 再帰関数として実装する都合上、別で public なメンバ関数 find を用意しています
     def _find(root: Optional[Node], val):
         key = hash(str(val))
         if root == None:
@@ -103,17 +125,21 @@ class Treap:
         else:
             return Treap._find(root.child[root.key < key], val)
 
+    # 値の挿入
     def insert(self, key):
         self.root = Treap._insert(self.root, key)
         return self
 
+    # 値の削除
     def erase(self, key):
         self.root = Treap._erase(self.root, key)
         return self
 
+    # 値の検索
     def find(self, key):
         return Treap._find(self.root, key)
 
+    # すべての値の列挙
     def items(self):
         if self.root == None:
             return []
@@ -129,16 +155,20 @@ class Treap:
 
 
 class Set(Treap):
+    # Iterable なオブジェクト (list など) から Set を構成する
     def __init__(self, l: Iterable[Any] = []):
         super().__init__()
 
         for val in l:
             self.insert(val)
 
-    def copy(self):
+    def copy(self):  # deepcopy
         return Set(self.items())
 
-    def __add__(self, other):
+    def order(self):  # 位数
+        return len(self.items())
+
+    def __add__(self, other):  # 直和集合
         res = Set()
         for item in self.items():
             res.insert((item, 0))
@@ -146,33 +176,33 @@ class Set(Treap):
             res.insert((item, 1))
         return res
 
-    def __or__(self, other):
+    def __or__(self, other):  # 和集合
         res = self.copy()
         for item in other.items():
             res.insert(item)
         return res
 
-    def __sub__(self, other):
+    def __sub__(self, other):  # 差集合
         res = self.copy()
         for item in other.items():
             res.erase(item)
         return res
 
-    def __mul__(self, other):
+    def __mul__(self, other):  # 直積集合 (2項間)
         res = Set()
         for p in self.items():
             for q in other.items():
                 res.insert((p, q))
         return res
 
-    def __and__(self, other):
+    def __and__(self, other):  # 積集合
         res = self.copy()
         res = res - (self - other)
         return res
 
-    def __rpow__(self, left):
+    def __rpow__(self, left):  # べき集合
         if left != 2:
-            raise ValueError("err")
+            raise ValueError(f"Power set should be written as: 2 ** Set")
         if self.root == None:
             return Set()
 
@@ -189,10 +219,10 @@ class Set(Treap):
 
         return res
 
-    def __contains__(self, other):
-        return self.find(other)
+    def __contains__(self, val):  # 値 val が集合に属するか
+        return self.find(val)
 
-    def __le__(self, other):
+    def __le__(self, other):  # 左辺の集合は右辺の集合の部分集合か
         left = self.items()
         flag = True
         for item in left:
@@ -200,7 +230,7 @@ class Set(Treap):
                 flag = False
         return flag
 
-    def __ge__(self, other):
+    def __ge__(self, other):  # 右辺の集合は左辺の集合の部分集合か
         right = other.items()
         flag = True
         for item in right:
@@ -208,28 +238,24 @@ class Set(Treap):
                 flag = False
         return flag
 
-    def __eq__(self, other):
+    def __eq__(self, other):  # 左辺の集合と右辺の集合は等しいか
         return (self <= other) and (self >= other)
 
-    def __ne__(self, other):
+    def __ne__(self, other):  # 左辺の集合と右辺の集合は等しくないか
         return not (self == other)
 
-    def __lt__(self, other):
+    def __lt__(self, other):  # 左辺の集合は右辺の集合の真部分集合か
         return (self <= other) and (self != other)
 
-    def __gt__(self, other):
+    def __gt__(self, other):  # 右辺の集合は左辺の集合の真部分集合か
         return (self >= other) and (self != other)
 
-    def product(*args):
+    def product(*args):  # 直積集合 (多項間)
         pools = [tuple(pool.items()) for pool in args]
         res = [[]]
         for pool in pools:
             res = [x + [y] for x in res for y in pool]
         return res
-
-    def order(self):
-        return len(self.items())
-
 
 # s = Set([0, 1, 2])
 # print(s)
