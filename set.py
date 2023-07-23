@@ -98,20 +98,21 @@ class Treap:
 
     # 値が key であるノードの削除
     # 再帰関数として実装する都合上、別で public なメンバ関数 erase を用意しています
-    def _erase(root: Optional[Node], key):
+    def _erase(root: Optional[Node], val):
+        key = hash(str(val))
         if root == None:
             return None
 
-        if key != root.key:
+        if val != root.val:
             b = int(key < root.key)
-            root.child[1-b] = Treap._erase(root.child[1-b], key)
+            root.child[1-b] = Treap._erase(root.child[1-b], val)
         else:
             if (root.child[0] == None or root.child[1] == None):
                 root = root.child[0] if root.child[0] != None else root.child[1]
             else:
                 b = int(root.child[0].priority < root.child[1].priority)
                 root = Treap._rotate(root, 1-b)
-                root.child[1-b] = Treap._erase(root.child[1-b], key)
+                root.child[1-b] = Treap._erase(root.child[1-b], val)
         return root
 
     # 値が val であるノードの検索 あれば True, なければ False
@@ -257,19 +258,20 @@ class Set(Treap):
             res = [x + [y] for x in res for y in pool]
         return res
 
-# s = Set([0, 1, 2])
-# print(s)
-# print(s + s)
-# print(s - s)
-# print(s * s)
-# print(s & s)
-# print(s | s)
-# print(2 ** s)
-# print(1 in s)
-# print(4 in s)
-# print(s <= Set([0, 1, 2, 3]))
-# print(s <= Set([0, 1]))
-# print(s >= Set([0, 1]))
-# print(s >= Set([0, 1, 2, 3]))
-# print(s == Set([0, 1, 2]))
-# print(Set.product(s, s, s))
+s = Set([0, 1, 2])
+print(s)
+print(s + s)
+print(s - s)
+print(s * s)
+print(s & s)
+print(s | s)
+print(2 ** s)
+print(1 in s)
+print(4 in s)
+print(s <= Set([0, 1, 2, 3]))
+print(s <= Set([0, 1]))
+print(s >= Set([0, 1]))
+print(s >= Set([0, 1, 2, 3]))
+print(s == Set([0, 1, 2]))
+print(Set.product(s, s, s))
+print(s.erase(2))
