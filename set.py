@@ -256,6 +256,13 @@ class Set(Treap):
         res = [[]]
         for pool in pools:
             res = [x + [y] for x in res for y in pool]
+        return Set(res)
+
+    def direct_sum(*args):  # 直和集合 (多項間)
+        res = Set()
+        for idx, val in enumerate(args):
+            for item in val.items():
+                res.insert((item, idx))
         return res
 
 s = Set([0, 1, 2])
